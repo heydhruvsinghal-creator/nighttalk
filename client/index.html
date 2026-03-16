@@ -13,11 +13,16 @@
         .chip.selected { background: #6366f1; border-color: #818cf8; box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
         .glow-button { background: linear-gradient(45deg, #4f46e5, #9333ea); transition: transform 0.2s; }
         .glow-button:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(79, 70, 229, 0.6); }
+        
+        /* Custom scrollbar for chat */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
     </style>
 </head>
 <body class="flex items-center justify-center p-4">
 
-    <div id="landing" class="glass max-w-lg w-full p-8 rounded-3xl shadow-2xl">
+    <div id="landing" class="glass max-w-lg w-full p-8 rounded-3xl shadow-2xl transition-all">
         <div class="text-center mb-8">
             <h1 class="text-5xl font-extrabold tracking-tighter mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">NightTalk</h1>
             <p class="text-gray-400 font-light italic">Speak your truth under the cover of night.</p>
@@ -36,45 +41,70 @@
 
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Select Your Interests (Max 3)</label>
-                <div id="topic-container" class="flex flex-wrap gap-2">
-                    </div>
+                <div id="topic-container" class="flex flex-wrap gap-2"></div>
             </div>
 
             <button onclick="enterLobby()" class="glow-button w-full py-4 rounded-2xl font-bold text-lg mt-4">Enter the Void</button>
         </div>
     </div>
 
-    <div id="lobby" class="hidden w-full max-w-6xl">
+    <div id="lobby" class="hidden w-full max-w-6xl transition-all">
         <div class="flex flex-col md:flex-row gap-6">
-            
             <div class="w-full md:w-80 space-y-4">
                 <div class="glass p-6 rounded-3xl">
                     <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-green-500 rounded-full"></span> Global Groups
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Global Groups
                     </h2>
-                    <div id="group-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
-                        </div>
+                    <div id="group-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-2"></div>
                 </div>
             </div>
 
             <div class="flex-1 glass p-6 rounded-3xl">
                 <h2 class="text-2xl font-bold mb-6">People Online</h2>
-                <div id="users-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div id="users-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-overlay" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 transition-all">
+        <div class="glass w-full max-w-2xl h-[85vh] rounded-3xl flex flex-col shadow-2xl border border-white/20">
+            
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-white/5 rounded-t-3xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold" id="chat-avatar">U</div>
+                    <div>
+                        <h3 id="chat-username" class="text-xl font-bold text-white tracking-wide">Username</h3>
+                        <p class="text-xs text-green-400 font-medium">● Online Securely</p>
                     </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="alert('User Reported!')" class="px-3 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/30 border border-red-500/20 rounded-xl text-xs font-bold transition-all">Report</button>
+                    <button onclick="alert('User Blocked!')" class="px-3 py-2 bg-orange-500/10 text-orange-400 hover:bg-orange-500/30 border border-orange-500/20 rounded-xl text-xs font-bold transition-all">Block</button>
+                    <button onclick="closeChat()" class="px-3 py-2 bg-white/5 text-gray-300 hover:bg-white/20 border border-white/10 rounded-xl text-xs font-bold transition-all">Close</button>
+                </div>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+                <div class="text-center text-xs text-gray-500 my-4">Connection Secured. Say hello!</div>
+                </div>
+
+            <div class="p-4 border-t border-white/10 bg-black/40 rounded-b-3xl flex gap-3">
+                <input type="text" id="chat-input" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-all text-sm" placeholder="Type a message anonymously...">
+                <button onclick="sendMessage()" class="glow-button px-6 py-3 rounded-xl font-bold text-sm tracking-widest">SEND</button>
             </div>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Connect to your server
         const socket = io(window.location.origin, { secure: true, transports: ['websocket', 'polling'] });
-        
-        // Here are your 15 topics! You can change these words anytime.
         const topicsList = ["Politics", "Art", "Travel", "Gaming", "Coding", "Music", "Fitness", "Movies", "Anime", "Crypto", "Space", "Mental Health", "Photography", "Philosophy", "Foodie"];
         const selectedTopics = new Set();
+        
+        let allUsers = []; 
+        let currentChatUserId = null;
 
-        // 1. Automatically build the clickable topic chips on the front page
+        // Build Front Page Topics
         const topicContainer = document.getElementById('topic-container');
         topicsList.forEach(topic => {
             const span = document.createElement('span');
@@ -82,55 +112,126 @@
             span.innerText = topic;
             span.onclick = () => {
                 if(selectedTopics.has(topic)) {
-                    selectedTopics.delete(topic);
-                    span.classList.remove('selected');
-                } else if(selectedTopics.size < 3) { // Max 3 topics
-                    selectedTopics.add(topic);
-                    span.classList.add('selected');
+                    selectedTopics.delete(topic); span.classList.remove('selected');
+                } else if(selectedTopics.size < 3) {
+                    selectedTopics.add(topic); span.classList.add('selected');
                 }
             };
             topicContainer.appendChild(span);
         });
 
-        // 2. Automatically build the 15 groups in the sidebar on the second page
+        // Build Sidebar Groups
         const groupList = document.getElementById('group-list');
         topicsList.forEach(topic => {
             const div = document.createElement('div');
             div.className = 'p-3 rounded-xl hover:bg-white/10 cursor-pointer border border-transparent hover:border-white/10 transition-all flex justify-between items-center group';
-            div.innerHTML = `<span># ${topic}</span><span class="text-xs text-gray-500 group-hover:text-indigo-400">Join</span>`;
+            div.innerHTML = `<span># ${topic}</span><span class="text-xs text-gray-500 group-hover:text-indigo-400 font-bold uppercase tracking-widest">Join</span>`;
             groupList.appendChild(div);
         });
 
-        // 3. When the user clicks "Enter the Void"
         function enterLobby() {
             const nickname = document.getElementById('nickname').value;
-            const age = document.getElementById('age').value; // Grab the age from the slider
+            const age = document.getElementById('age').value;
             if(!nickname) return alert("Pick a nickname!");
             
-            // Send their info to your server
             socket.emit('join_lobby', { nickname, age, topics: Array.from(selectedTopics) });
-
-            // Hide the front page, show the second page
             document.getElementById('landing').classList.add('hidden');
             document.getElementById('lobby').classList.remove('hidden');
         }
 
-        // 4. When the server tells us who is online, draw their cards
+        // Draw the users in the lobby
         socket.on('update_lobby', (users) => {
+            allUsers = users;
             const grid = document.getElementById('users-grid');
-            grid.innerHTML = users.map(user => `
-                <div class="glass p-4 rounded-2xl hover:border-indigo-500/50 transition-all">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-indigo-300 text-lg">${user.nickname}</h3>
-                        <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-md">Age ${user.age || '??'}</span>
+            
+            grid.innerHTML = users.map(user => {
+                const isMe = user.socketId === socket.id;
+                
+                // If it's YOU, show a gray disabled button. If it's SOMEONE ELSE, show the blue message button!
+                const actionButton = isMe 
+                    ? `<button disabled class="w-full mt-4 py-2 rounded-xl bg-gray-500/10 text-gray-500 text-xs font-bold uppercase tracking-widest cursor-not-allowed border border-gray-500/20">This is You</button>`
+                    : `<button onclick="openChat('${user.socketId}', '${user.nickname}')" class="w-full mt-4 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 text-xs font-bold uppercase tracking-widest border border-indigo-500/30 transition-all">Message</button>`;
+
+                return `
+                <div class="glass p-5 rounded-2xl hover:border-indigo-500/50 transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                ${user.nickname}
+                            </h3>
+                            <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-md border border-indigo-500/20">Age ${user.age}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1">
+                            ${user.topics.map(t => `<span class="text-[10px] uppercase tracking-widest font-semibold bg-white/5 border border-white/10 px-2 py-1 rounded-md text-gray-300">${t}</span>`).join('')}
+                        </div>
                     </div>
-                    <div class="flex flex-wrap gap-1">
-                        ${user.topics.map(t => `<span class="text-[10px] uppercase tracking-tighter bg-white/5 px-2 py-0.5 rounded">${t}</span>`).join('')}
-                    </div>
-                    <button class="w-full mt-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all">Message</button>
-                </div>
-            `).join('');
+                    ${actionButton}
+                </div>`;
+            }).join('');
         });
+
+        // --- CHAT LOGIC ---
+
+        function openChat(id, name) {
+            currentChatUserId = id;
+            document.getElementById('chat-username').innerText = name;
+            document.getElementById('chat-avatar').innerText = name.charAt(0).toUpperCase();
+            document.getElementById('chat-messages').innerHTML = '<div class="text-center text-xs text-gray-500 my-4">Connection Secured. Say hello!</div>'; 
+            document.getElementById('chat-overlay').classList.remove('hidden');
+        }
+
+        function closeChat() {
+            document.getElementById('chat-overlay').classList.add('hidden');
+            currentChatUserId = null;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if(!msg || !currentChatUserId) return;
+
+            // Draw my message on my screen
+            drawMessage('You', msg, 'right');
+            
+            // Send to server
+            socket.emit('send_message', { receiverId: currentChatUserId, message: msg });
+            input.value = '';
+        }
+
+        // Allow pressing "Enter" to send
+        document.getElementById('chat-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        socket.on('receive_message', (data) => {
+            const sender = allUsers.find(u => u.socketId === data.senderId);
+            const senderName = sender ? sender.nickname : "Anonymous";
+            
+            // Auto-open chat if someone messages you!
+            if (currentChatUserId !== data.senderId) {
+                openChat(data.senderId, senderName);
+            }
+            
+            drawMessage(senderName, data.message, 'left', data.timestamp);
+        });
+
+        function drawMessage(sender, text, side, time) {
+            const chatBox = document.getElementById('chat-messages');
+            const align = side === 'right' ? 'self-end' : 'self-start';
+            const bgColor = side === 'right' ? 'bg-indigo-600 text-white' : 'bg-white/10 text-gray-100 border border-white/10';
+            const nameColor = side === 'right' ? 'text-indigo-300' : 'text-gray-400';
+            
+            chatBox.innerHTML += `
+                <div class="flex flex-col ${align} max-w-[80%]">
+                    <span class="text-[10px] ${nameColor} mb-1 px-1 font-semibold tracking-wide">${sender} • ${time || new Date().toLocaleTimeString()}</span>
+                    <div class="${bgColor} px-4 py-3 rounded-2xl shadow-lg text-sm leading-relaxed">
+                        ${text}
+                    </div>
+                </div>
+            `;
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
+        }
     </script>
 </body>
 </html>
