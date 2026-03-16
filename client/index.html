@@ -3,184 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NightTalk | Connect</title>
+    <title>nighttalk. | just vibes.</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0f0c29; background: linear-gradient(to right, #24243e, #302b63, #0f0c29); color: white; overflow: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { font-family: 'Space Grotesk', sans-serif; background-color: #050505; color: #f3f4f6; overflow: hidden; }
+        
+        /* Animated ambient background */
+        .ambient-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            background: radial-gradient(circle at 15% 50%, rgba(79, 70, 229, 0.15), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%);
+            animation: pulse-bg 10s infinite alternate;
+        }
+        @keyframes pulse-bg { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+
+        .glass { background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .glass-dating { background: rgba(236, 72, 153, 0.05); border: 1px solid rgba(236, 72, 153, 0.2); }
-        .chip { transition: all 0.2s; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.2); }
-        .chip.selected { background: #4f46e5; border-color: #818cf8; color: white; box-shadow: 0 0 10px rgba(79, 70, 229, 0.5); }
+        .chip { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .chip.selected { background: #6366f1; border-color: #818cf8; color: white; transform: scale(1.05); box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+        .gender-btn.selected { background: white; color: black; box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); }
+        
+        /* Sleek scrollbar */
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        
+        input:focus { box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
     </style>
 </head>
 <body class="h-screen w-full flex items-center justify-center">
 
-    <div id="landing" class="glass max-w-lg w-full p-8 rounded-3xl shadow-2xl z-50 absolute transition-all duration-500 max-h-[95vh] flex flex-col">
-        <div class="text-center mb-6">
-            <h1 class="text-5xl font-extrabold tracking-tighter mb-1 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">NightTalk</h1>
-            <p class="text-gray-400 text-sm">Professional Anonymous Connectivity</p>
+    <div class="ambient-bg"></div>
+
+    <div id="auth-container" class="glass max-w-lg w-full p-8 rounded-[2rem] shadow-2xl z-50 absolute transition-all duration-500 max-h-[95vh] flex flex-col border-t border-white/10">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold tracking-tighter mb-1 text-white lowercase drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">nighttalk.</h1>
+            <p id="auth-subtitle" class="text-indigo-400 text-sm font-medium lowercase">no cap. just vibes.</p>
         </div>
         
-        <div class="space-y-5 overflow-y-auto pr-2 custom-scrollbar flex-1">
+        <div id="step-1" class="space-y-6 flex-1 transition-all">
             <div>
-                <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Alias / Nickname</label>
-                <input type="text" id="nickname" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 text-sm" placeholder="Enter a cool name...">
+                <label class="block text-xs font-semibold lowercase text-gray-400 mb-2">who are u?</label>
+                <input type="text" id="nickname" class="w-full bg-black/60 border border-white/10 rounded-2xl px-4 py-3.5 focus:outline-none focus:border-indigo-500 text-sm text-white placeholder-gray-600 transition-all" placeholder="pick an aesthetic name...">
             </div>
             
             <div>
-                <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Age: <span id="ageVal" class="text-indigo-400 text-sm">21</span></label>
+                <label class="block text-xs font-semibold lowercase text-gray-400 mb-2">secret code</label>
+                <input type="password" id="password" class="w-full bg-black/60 border border-white/10 rounded-2xl px-4 py-3.5 focus:outline-none focus:border-indigo-500 text-sm text-white placeholder-gray-600 transition-all" placeholder="don't leak this...">
+                <div class="text-right mt-2">
+                    <span onclick="forgotPassword()" class="text-[11px] text-gray-500 hover:text-white cursor-pointer transition-all lowercase">forgot password? 💀</span>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold lowercase text-gray-400 mb-2">your energy</label>
+                <div class="flex gap-2">
+                    <button onclick="selectGender('boy', this)" class="gender-btn flex-1 py-3 bg-black/40 rounded-2xl text-sm font-semibold text-gray-400 transition-all border border-white/5 lowercase hover:bg-white/10">boy</button>
+                    <button onclick="selectGender('girl', this)" class="gender-btn flex-1 py-3 bg-black/40 rounded-2xl text-sm font-semibold text-gray-400 transition-all border border-white/5 lowercase hover:bg-white/10">girl</button>
+                    <button onclick="selectGender('other', this)" class="gender-btn flex-1 py-3 bg-black/40 rounded-2xl text-sm font-semibold text-gray-400 transition-all border border-white/5 lowercase hover:bg-white/10">other</button>
+                </div>
+            </div>
+
+            <button onclick="goToStep2()" class="w-full py-4 rounded-2xl font-bold bg-white text-black hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all text-sm lowercase mt-4">next vibe ➔</button>
+        </div>
+
+        <div id="step-2" class="hidden space-y-6 overflow-y-auto pr-2 custom-scrollbar flex-1 transition-all">
+            <div>
+                <label class="block text-xs font-semibold lowercase text-gray-400 mb-2">how long u been on earth: <span id="ageVal" class="text-indigo-400 font-bold">21</span></label>
                 <input type="range" id="age" min="13" max="99" value="21" class="w-full accent-indigo-500" oninput="document.getElementById('ageVal').innerText = this.value">
             </div>
 
             <div>
-                <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Interests (Select up to 5)</label>
-                <div class="bg-black/20 border border-white/5 rounded-xl p-3 h-32 overflow-y-auto">
-                    <div id="topic-container" class="flex flex-wrap gap-2">
-                        </div>
+                <label class="block text-xs font-semibold lowercase text-gray-400 mb-2">your aesthetic (pick 5)</label>
+                <div class="bg-black/40 border border-white/5 rounded-2xl p-4 h-36 overflow-y-auto">
+                    <div id="topic-container" class="flex flex-wrap gap-2"></div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
-                <input type="checkbox" id="dating-opt-in" class="w-5 h-5 accent-pink-500 cursor-pointer">
-                <div class="text-sm">
-                    <span class="font-bold text-pink-400">Unlock Midnight Lounge</span>
-                    <p class="text-[10px] text-gray-400">Opt-in for 18+ dating features</p>
+            <div class="flex items-center gap-4 p-4 bg-pink-500/5 rounded-2xl border border-pink-500/20 hover:bg-pink-500/10 transition-all cursor-pointer" onclick="document.getElementById('dating-opt-in').click()">
+                <input type="checkbox" id="dating-opt-in" class="w-5 h-5 accent-pink-500 cursor-pointer pointer-events-none">
+                <div>
+                    <span class="font-bold text-pink-400 text-sm lowercase">unlock the rizz lounge 👀</span>
+                    <p class="text-[10px] text-gray-400 lowercase mt-0.5">18+ only. swipe & match.</p>
                 </div>
             </div>
             
-            <button onclick="enterLobby()" class="w-full py-3.5 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 transition-all tracking-widest text-sm mt-2">ENTER PLATFORM</button>
+            <div class="flex gap-3 mt-4">
+                <button onclick="goToStep1()" class="w-1/3 py-4 rounded-2xl font-semibold bg-white/5 hover:bg-white/10 transition-all text-sm lowercase">nevermind</button>
+                <button onclick="enterLobby()" class="w-2/3 py-4 rounded-2xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)] transition-all text-sm lowercase">pull up ✨</button>
+            </div>
         </div>
     </div>
 
     <div id="dashboard" class="hidden h-full w-full flex opacity-0 transition-opacity duration-700">
         
-        <nav class="w-20 md:w-64 glass border-r border-white/10 flex flex-col p-4 flex-shrink-0">
-            <h2 class="hidden md:block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-8 mt-2 px-2">NightTalk</h2>
+        <nav class="w-20 md:w-64 glass border-r border-white/5 flex flex-col p-4 flex-shrink-0 bg-black/40">
+            <h2 class="hidden md:block text-2xl font-bold text-white mb-8 mt-4 px-3 lowercase tracking-tight">nighttalk.</h2>
             
-            <div class="space-y-2 flex-1">
-                <button onclick="switchTab('global')" id="tab-global" class="w-full flex items-center gap-3 p-3 rounded-xl bg-indigo-500/20 text-indigo-300 font-bold transition-all">
-                    <span>🌍</span> <span class="hidden md:block">Global Lobby</span>
+            <div class="space-y-3 flex-1">
+                <button onclick="switchTab('global')" id="tab-global" class="w-full flex items-center gap-4 p-3.5 rounded-2xl bg-white/10 text-white font-semibold transition-all lowercase text-sm">
+                    <span class="text-xl">🪐</span> <span class="hidden md:block">the timeline</span>
                 </button>
-                <button onclick="switchTab('dating')" id="tab-dating" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-400 font-bold transition-all">
-                    <span>🔥</span> <span class="hidden md:block">Midnight Lounge</span>
+                <button onclick="switchTab('dating')" id="tab-dating" class="w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-white/5 text-gray-500 font-semibold transition-all lowercase text-sm">
+                    <span class="text-xl">🔥</span> <span class="hidden md:block">rizz lounge</span>
                 </button>
-                <button onclick="switchTab('dms')" id="tab-dms" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-400 font-bold transition-all">
-                    <span>💬</span> <span class="hidden md:block">My Chats</span>
+                <button onclick="switchTab('dms')" id="tab-dms" class="w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-white/5 text-gray-500 font-semibold transition-all lowercase text-sm">
+                    <span class="text-xl">💬</span> <span class="hidden md:block">spilled tea</span>
                 </button>
             </div>
             
-            <div class="mt-auto p-3 glass rounded-xl text-xs text-center text-gray-400 hidden md:block">
-                Logged in as <br><span id="my-name-display" class="font-bold text-white"></span>
+            <div class="mt-auto p-4 glass rounded-2xl text-xs text-gray-400 hidden md:block lowercase border border-white/5">
+                ur identity rn:<br><span id="my-name-display" class="font-bold text-white text-sm"></span>
             </div>
         </nav>
 
-        <main class="flex-1 h-full overflow-y-auto p-6 relative">
+        <main class="flex-1 h-full overflow-y-auto p-4 md:p-8 relative custom-scrollbar">
             
             <div id="view-global" class="w-full max-w-5xl mx-auto">
-                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3"><span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span> Everyone Online</h2>
-                <div id="grid-global" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+                <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 lowercase text-white"><span class="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_#4ade80]"></span> main character energy</h2>
+                <div id="grid-global" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
             <div id="view-dating" class="hidden w-full max-w-5xl mx-auto">
-                <h2 class="text-3xl font-bold mb-2 text-pink-400 drop-shadow-lg">Midnight Lounge</h2>
-                <p class="text-gray-400 mb-8 text-sm">Swipe, chat, and connect. 18+ only.</p>
+                <h2 class="text-3xl font-bold mb-2 text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.4)] lowercase">the rizz lounge</h2>
+                <p class="text-gray-500 mb-8 text-sm lowercase">shoot your shot. strictly 18+.</p>
                 <div id="grid-dating" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
             </div>
 
             <div id="view-dms" class="hidden w-full max-w-3xl mx-auto">
-                <h2 class="text-3xl font-bold mb-6">Recent Conversations</h2>
+                <h2 class="text-3xl font-bold mb-8 lowercase">spilled tea ☕</h2>
                 <div id="grid-dms" class="flex flex-col gap-3"></div>
             </div>
         </main>
 
-        <aside id="chat-drawer" class="fixed right-0 top-0 h-full w-full md:w-[400px] glass border-l border-white/10 transform translate-x-full transition-transform duration-300 z-40 flex flex-col bg-black/50">
-            <div class="p-5 border-b border-white/10 flex justify-between items-center bg-white/5">
+        <aside id="chat-drawer" class="fixed right-0 top-0 h-full w-full md:w-[400px] glass border-l border-white/10 transform translate-x-full transition-transform duration-300 z-40 flex flex-col bg-[#0a0a0a]">
+            <div class="p-5 border-b border-white/5 flex justify-between items-center bg-white/5 backdrop-blur-md">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold" id="chat-avatar">U</div>
+                    <div class="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg" id="chat-avatar">U</div>
                     <div>
-                        <h3 id="chat-username" class="text-lg font-bold text-white">User</h3>
-                        <p id="chat-status" class="text-xs text-green-400">Online</p>
+                        <h3 id="chat-username" class="text-lg font-bold text-white lowercase">user</h3>
+                        <p id="chat-status" class="text-xs text-green-400 font-medium lowercase">vibing online</p>
                     </div>
                 </div>
-                <button onclick="closeChat()" class="text-gray-400 hover:text-white font-bold bg-white/5 px-3 py-1 rounded-lg">X</button>
+                <button onclick="closeChat()" class="text-gray-500 hover:text-white font-bold bg-white/5 px-4 py-2 rounded-xl text-xs lowercase transition-all">close x</button>
             </div>
             
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-5 flex flex-col gap-4"></div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-5 flex flex-col gap-4 custom-scrollbar"></div>
             
-            <div class="p-4 border-t border-white/10 bg-black/40">
-                <div class="flex gap-2">
-                    <input type="text" id="chat-input" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" placeholder="Message...">
-                    <button onclick="sendMessage()" class="bg-indigo-600 hover:bg-indigo-500 px-5 rounded-xl font-bold text-sm transition-all">SEND</button>
-                </div>
+            <div class="p-4 border-t border-white/5 bg-black/60 flex gap-2 backdrop-blur-md">
+                <input type="text" id="chat-input" class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-indigo-500 text-white placeholder-gray-600 transition-all lowercase" placeholder="say something nice... or don't 💅">
+                <button onclick="sendMessage()" class="bg-white text-black hover:bg-gray-200 px-6 rounded-2xl font-bold text-sm transition-all lowercase">send</button>
             </div>
         </aside>
     </div>
 
-    <div id="notification-popup" class="hidden fixed bottom-6 right-6 md:right-[420px] glass p-4 rounded-2xl shadow-2xl z-50 border border-indigo-500/50 cursor-pointer bg-black/80" onclick="openChat(pendingChatUserId, pendingChatUserName)">
-        <p class="text-xs text-indigo-400 font-bold mb-1">New Message from <span id="noti-name" class="text-white"></span></p>
-        <p id="noti-msg" class="text-sm text-gray-300 truncate w-48">msg</p>
+    <div id="notification-popup" class="hidden fixed bottom-6 right-6 md:right-[420px] glass p-4 rounded-2xl shadow-[0_0_30px_rgba(79,70,229,0.2)] z-50 border border-white/10 cursor-pointer bg-[#0a0a0a]/90 backdrop-blur-xl transition-all" onclick="openChat(pendingChatUserId, pendingChatUserName)">
+        <p class="text-xs text-indigo-400 font-bold mb-1 lowercase flex items-center gap-2"><span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping"></span> tea alert from <span id="noti-name" class="text-white"></span></p>
+        <p id="noti-msg" class="text-sm text-gray-300 truncate w-48 lowercase">msg</p>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io(window.location.origin, { secure: true, transports: ['websocket', 'polling'] });
         
-        let myData = {};
+        let selectedGender = "";
         let allUsers = []; 
         let currentChatUserId = null;
         let myContacts = {}; 
         let pendingChatUserId = null;
         let pendingChatUserName = "";
 
-        // NEW: MASSIVE TOPICS LIST
-        const topicsList = [
-            "Politics", "Art", "Travel", "Gaming", "Coding", "Music", "Fitness", 
-            "Movies", "Anime", "Crypto", "Space", "Mental Health", "Photography", 
-            "Philosophy", "Foodie", "Astrology", "Books", "Startups", "Memes", 
-            "Sports", "Fashion", "Nature", "History", "Science", "DIY", "Pets", 
-            "Cars", "Cooking", "Investing", "Writing", "Design", "Yoga", "Tech", 
-            "EDM", "Hip-Hop"
-        ];
+        const topicsList = ["y2k", "opium", "gymbro", "kpop", "coding", "gaming", "indie", "thrifting", "astrology", "memes", "streetwear", "anime", "skating", "crypto", "film camera", "EDM", "hip-hop", "manifesting", "tech", "foodie", "night drives"];
         const selectedTopics = new Set();
 
-        // Build Topics UI
         const topicContainer = document.getElementById('topic-container');
         topicsList.forEach(topic => {
             const span = document.createElement('span');
-            span.className = 'chip px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/5 text-gray-300 hover:bg-white/10';
+            span.className = 'chip px-3 py-1.5 rounded-xl text-xs font-medium bg-white/5 text-gray-400 hover:text-white lowercase';
             span.innerText = topic;
             span.onclick = () => {
                 if(selectedTopics.has(topic)) {
-                    selectedTopics.delete(topic); 
-                    span.classList.remove('selected');
-                } else if(selectedTopics.size < 5) { // Max 5 now!
-                    selectedTopics.add(topic); 
-                    span.classList.add('selected');
+                    selectedTopics.delete(topic); span.classList.remove('selected');
+                } else if(selectedTopics.size < 5) { 
+                    selectedTopics.add(topic); span.classList.add('selected');
                 }
             };
             topicContainer.appendChild(span);
         });
+
+        function forgotPassword() {
+            alert("bruh... you literally don't exist here. we leave no trace. just make a new one 💀");
+        }
+
+        function selectGender(gender, btnElement) {
+            selectedGender = gender;
+            document.querySelectorAll('.gender-btn').forEach(btn => btn.classList.remove('selected'));
+            btnElement.classList.add('selected');
+        }
+
+        function goToStep2() {
+            const username = document.getElementById('nickname').value;
+            const password = document.getElementById('password').value;
+            if(!username) return alert("bestie you gotta pick a name first 🙄");
+            if(!password) return alert("put a password so no one steals your vibe.");
+            if(!selectedGender) return alert("pick your energy first.");
+
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+            document.getElementById('auth-subtitle').innerText = "build your aesthetic.";
+        }
+
+        function goToStep1() {
+            document.getElementById('step-2').classList.add('hidden');
+            document.getElementById('step-1').classList.remove('hidden');
+            document.getElementById('auth-subtitle').innerText = "no cap. just vibes.";
+        }
 
         function enterLobby() {
             const nickname = document.getElementById('nickname').value;
             const age = parseInt(document.getElementById('age').value);
             const lookingForDates = document.getElementById('dating-opt-in').checked;
             
-            if(!nickname) return alert("Pick an alias first!");
-            if(lookingForDates && age < 18) return alert("You must be 18+ to enter the Midnight Lounge.");
+            if(lookingForDates && age < 18) return alert("chill, you gotta be 18+ to enter the rizz lounge 💀");
 
-            myData = { nickname, age, lookingForDates, topics: Array.from(selectedTopics) };
-            document.getElementById('my-name-display').innerText = nickname;
-            
-            // Send topics to server!
+            const myData = { nickname, gender: selectedGender, age, lookingForDates, topics: Array.from(selectedTopics) };
             socket.emit('join_lobby', myData);
             
-            document.getElementById('landing').style.opacity = "0";
+            document.getElementById('auth-container').style.opacity = "0";
             setTimeout(() => {
-                document.getElementById('landing').classList.add('hidden');
+                document.getElementById('auth-container').classList.add('hidden');
                 const dash = document.getElementById('dashboard');
                 dash.classList.remove('hidden');
                 setTimeout(() => dash.style.opacity = "1", 50);
@@ -190,12 +242,21 @@
         function switchTab(tabName) {
             ['global', 'dating', 'dms'].forEach(t => {
                 document.getElementById(`view-${t}`).classList.add('hidden');
-                document.getElementById(`tab-${t}`).className = "w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-400 font-bold transition-all";
+                document.getElementById(`tab-${t}`).className = "w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-white/5 text-gray-500 font-semibold transition-all lowercase text-sm";
             });
             document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabName}`).className = `w-full flex items-center gap-3 p-3 rounded-xl text-white font-bold transition-all ${tabName === 'dating' ? 'bg-pink-600/20 text-pink-300' : 'bg-indigo-500/20 text-indigo-300'}`;
             
+            let activeClass = 'bg-white/10 text-white shadow-[0_4px_15px_rgba(0,0,0,0.2)]';
+            if (tabName === 'dating') activeClass = 'bg-pink-500/20 text-pink-300 shadow-[0_4px_15px_rgba(236,72,153,0.1)]';
+            
+            document.getElementById(`tab-${tabName}`).className = `w-full flex items-center gap-4 p-3.5 rounded-2xl font-bold transition-all lowercase text-sm ${activeClass}`;
             if(tabName === 'dms') renderDMs();
+        }
+
+        function getGenderIcon(gender) {
+            if(gender === 'boy') return '<span class="text-blue-400">boy</span>';
+            if(gender === 'girl') return '<span class="text-pink-400">girl</span>';
+            return '<span class="text-purple-400">other</span>';
         }
 
         socket.on('update_lobby', (users) => {
@@ -208,40 +269,43 @@
 
             users.forEach(user => {
                 if(myContacts[user.socketId]) myContacts[user.socketId].isOnline = user.onlineStatus;
-                if(user.socketId === socket.id) return; 
-                if(!user.onlineStatus) return; 
+                if(user.socketId === socket.id || !user.onlineStatus) return; 
 
-                // HTML for the tags
                 const tagsHTML = user.topics && user.topics.length > 0 
-                    ? `<div class="flex flex-wrap gap-1 mt-3">` + user.topics.map(t => `<span class="text-[9px] uppercase tracking-widest font-semibold bg-white/10 px-2 py-1 rounded text-gray-300 border border-white/5">${t}</span>`).join('') + `</div>`
+                    ? `<div class="flex flex-wrap gap-1.5 mt-4">` + user.topics.map(t => `<span class="text-[10px] lowercase font-medium bg-white/5 px-2.5 py-1 rounded-lg text-gray-400 border border-white/5">${t}</span>`).join('') + `</div>`
                     : '';
 
                 globalHTML += `
-                <div class="glass p-5 rounded-2xl flex flex-col justify-between hover:bg-white/5 transition-all">
+                <div class="glass p-6 rounded-[2rem] flex flex-col justify-between hover:bg-white/5 transition-all border border-white/5">
                     <div>
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-bold text-white text-lg">${user.nickname}</h3>
-                            <span class="text-[10px] bg-white/10 text-gray-300 px-2 py-1 rounded-md">Age ${user.age}</span>
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-white text-xl lowercase">${user.nickname}</h3>
+                            <div class="flex gap-2">
+                                <span class="text-[10px] bg-white/10 text-gray-300 px-2.5 py-1 rounded-lg font-bold">${user.age}</span>
+                                <span class="text-[10px] bg-black/40 px-2.5 py-1 rounded-lg font-bold">${getGenderIcon(user.gender)}</span>
+                            </div>
                         </div>
                         ${tagsHTML}
                     </div>
-                    <button onclick="openChat('${user.socketId}', '${user.nickname}')" class="mt-4 py-2 w-full rounded-xl bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 text-xs font-bold transition-all border border-indigo-500/30">MESSAGE</button>
+                    <button onclick="openChat('${user.socketId}', '${user.nickname}')" class="mt-6 py-3 w-full rounded-2xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition-all border border-white/5 lowercase">vibe check ➔</button>
                 </div>`;
 
                 if(user.lookingForDates && user.age >= 18) {
                     datingHTML += `
-                    <div class="glass-dating p-6 rounded-3xl flex flex-col items-center text-center transform hover:scale-105 transition-all relative overflow-hidden">
-                        <div class="absolute top-3 right-3 text-[10px] bg-pink-500/20 text-pink-300 px-2 py-1 rounded-md border border-pink-500/20">Age ${user.age}</div>
-                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 mb-4 flex items-center justify-center text-2xl font-bold shadow-lg mt-2">${user.nickname.charAt(0)}</div>
-                        <h3 class="font-bold text-white text-xl">${user.nickname}</h3>
+                    <div class="glass-dating p-6 rounded-[2rem] flex flex-col items-center text-center transform hover:-translate-y-2 transition-all relative overflow-hidden group">
+                        <div class="absolute top-4 right-4 text-[10px] bg-pink-500/20 text-pink-300 px-2.5 py-1 rounded-lg font-bold">${user.age}</div>
+                        <div class="absolute top-4 left-4 text-[10px] bg-black/40 px-2.5 py-1 rounded-lg font-bold">${getGenderIcon(user.gender)}</div>
+                        
+                        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 mb-4 flex items-center justify-center text-3xl font-bold text-white shadow-[0_0_20px_rgba(236,72,153,0.3)] mt-4 group-hover:scale-110 transition-transform">${user.nickname.charAt(0)}</div>
+                        <h3 class="font-bold text-white text-xl lowercase">${user.nickname}</h3>
                         ${tagsHTML}
-                        <button onclick="openChat('${user.socketId}', '${user.nickname}')" class="mt-5 py-2 w-full rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold shadow-lg shadow-pink-500/30">💌 Say Hi</button>
+                        <button onclick="openChat('${user.socketId}', '${user.nickname}')" class="mt-6 py-3 w-full rounded-2xl bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold shadow-[0_0_15px_rgba(236,72,153,0.4)] lowercase transition-all">slide in dms 💌</button>
                     </div>`;
                 }
             });
 
-            gridGlobal.innerHTML = globalHTML || '<p class="text-gray-500">No one is online yet.</p>';
-            gridDating.innerHTML = datingHTML || '<p class="text-gray-500">The lounge is empty right now.</p>';
+            gridGlobal.innerHTML = globalHTML || '<p class="text-gray-600 text-sm lowercase">it\'s dead in here rn. wait for people to pull up.</p>';
+            gridDating.innerHTML = datingHTML || '<p class="text-gray-600 text-sm lowercase">literally no one is here 💀</p>';
             
             if(!document.getElementById('view-dms').classList.contains('hidden')) renderDMs();
         });
@@ -256,25 +320,25 @@
             const contactIds = Object.keys(myContacts);
             
             if(contactIds.length === 0) {
-                grid.innerHTML = '<p class="text-gray-500">You haven\'t messaged anyone yet. Go to the Global Lobby to start!</p>';
+                grid.innerHTML = '<p class="text-gray-600 text-sm lowercase">your dms are dry bestie. go talk to someone.</p>';
                 return;
             }
 
             grid.innerHTML = contactIds.map(id => {
                 const contact = myContacts[id];
                 const lastMsg = contact.messages.length > 0 ? contact.messages[contact.messages.length-1].text : 'No messages yet';
-                const statusDot = contact.isOnline ? '<span class="w-2 h-2 bg-green-500 rounded-full"></span>' : '<span class="w-2 h-2 bg-gray-500 rounded-full"></span>';
+                const statusDot = contact.isOnline ? '<span class="w-2 h-2 bg-green-400 rounded-full shadow-[0_0_5px_#4ade80]"></span>' : '<span class="w-2 h-2 bg-gray-600 rounded-full"></span>';
                 
                 return `
-                <div onclick="openChat('${id}', '${contact.name}')" class="glass p-4 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-white/5 transition-all">
+                <div onclick="openChat('${id}', '${contact.name}')" class="glass p-4 rounded-[1.5rem] flex items-center justify-between cursor-pointer hover:bg-white/10 transition-all border border-white/5">
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center font-bold">${contact.name.charAt(0)}</div>
+                        <div class="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center font-bold text-lg">${contact.name.charAt(0)}</div>
                         <div>
-                            <h4 class="font-bold text-white flex items-center gap-2">${contact.name} ${statusDot}</h4>
-                            <p class="text-xs text-gray-400 truncate w-48">${lastMsg}</p>
+                            <h4 class="font-bold text-white flex items-center gap-2 lowercase text-lg">${contact.name} ${statusDot}</h4>
+                            <p class="text-sm text-gray-500 truncate w-48 lowercase">${lastMsg}</p>
                         </div>
                     </div>
-                    <span class="text-xs font-bold text-indigo-400 bg-indigo-400/10 px-3 py-1 rounded-lg">OPEN</span>
+                    <span class="text-[10px] font-bold text-black bg-white px-3 py-1.5 rounded-lg lowercase">open</span>
                 </div>`;
             }).join('');
         }
@@ -285,11 +349,11 @@
             
             document.getElementById('chat-username').innerText = name;
             document.getElementById('chat-avatar').innerText = name.charAt(0);
-            document.getElementById('chat-status').innerText = myContacts[id].isOnline ? '● Online' : '○ Offline';
-            document.getElementById('chat-status').className = myContacts[id].isOnline ? 'text-xs text-green-400' : 'text-xs text-gray-500';
+            document.getElementById('chat-status').innerText = myContacts[id].isOnline ? 'vibing online' : 'ghosted (offline)';
+            document.getElementById('chat-status').className = myContacts[id].isOnline ? 'text-xs text-green-400 lowercase font-medium' : 'text-xs text-gray-500 lowercase font-medium';
             
             const chatBox = document.getElementById('chat-messages');
-            chatBox.innerHTML = '<div class="text-center text-xs text-gray-500 my-2">Chat History Initialized</div>';
+            chatBox.innerHTML = '<div class="text-center text-[10px] text-gray-600 my-4 lowercase font-medium uppercase-tracking">chat secured. spill it.</div>';
             myContacts[id].messages.forEach(msg => appendMessageHTML(msg.sender, msg.text, msg.side, msg.time));
             
             document.getElementById('chat-drawer').classList.remove('translate-x-full');
@@ -307,8 +371,8 @@
             const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             if(!msg || !currentChatUserId) return;
 
-            myContacts[currentChatUserId].messages.push({ sender: 'You', text: msg, side: 'right', time: time });
-            appendMessageHTML('You', msg, 'right', time);
+            myContacts[currentChatUserId].messages.push({ sender: 'you', text: msg, side: 'right', time: time });
+            appendMessageHTML('you', msg, 'right', time);
             
             socket.emit('send_message', { receiverId: currentChatUserId, message: msg });
             input.value = '';
@@ -319,7 +383,7 @@
 
         socket.on('receive_message', (data) => {
             const senderInfo = allUsers.find(u => u.socketId === data.senderId);
-            const senderName = senderInfo ? senderInfo.nickname : "Anonymous";
+            const senderName = senderInfo ? senderInfo.nickname : "anon";
             
             initContact(data.senderId, senderName);
             myContacts[data.senderId].messages.push({ sender: senderName, text: data.message, side: 'left', time: data.timestamp });
@@ -344,12 +408,12 @@
         function appendMessageHTML(sender, text, side, time) {
             const chatBox = document.getElementById('chat-messages');
             const align = side === 'right' ? 'self-end' : 'self-start';
-            const bg = side === 'right' ? 'bg-indigo-600 text-white' : 'bg-white/10 text-gray-200 border border-white/10';
+            const bg = side === 'right' ? 'bg-white text-black' : 'bg-white/10 text-white border border-white/5';
             
             chatBox.innerHTML += `
                 <div class="flex flex-col ${align} max-w-[85%]">
-                    <span class="text-[10px] text-gray-400 mb-1 px-1">${sender} • ${time}</span>
-                    <div class="${bg} px-4 py-2.5 rounded-2xl shadow-md text-sm">${text}</div>
+                    <span class="text-[10px] text-gray-500 mb-1 px-1 lowercase">${sender} • ${time}</span>
+                    <div class="${bg} px-5 py-3 rounded-2xl text-sm font-medium shadow-lg">${text}</div>
                 </div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
         }
