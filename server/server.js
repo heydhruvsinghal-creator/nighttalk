@@ -9,46 +9,46 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-// Serve frontend files
 app.use(express.static(path.join(__dirname, '../client')));
 
-// 🧠 OUR "FAKE" DATABASE (Saves in RAM)
 let activeUsers = [];
 
-// Real-time Chat Logic
 io.on('connection', (socket) => {
     console.log('New user connected:', socket.id);
 
-    // --- THIS IS WHERE THE NEW CODE WENT! ---
-    // When user joins from the landing page
     socket.on('join_lobby', (userData) => {
         const newUser = {
             nickname: userData.nickname,
-            age: userData.age,           // <--- We added Age here!
+            age: parseInt(userData.age),
             topics: userData.topics,
+            lookingForDates: userData.lookingForDates, // NEW: Dating intent
             socketId: socket.id,
             onlineStatus: true
         };
         
-        activeUsers.push(newUser); // Save user to RAM
-        io.emit('update_lobby', activeUsers); // Update everyone's screen
+        activeUsers.push(newUser);
+        io.emit('update_lobby', activeUsers);
     });
-    // ----------------------------------------
 
-    // Handle messages
     socket.on('send_message', (data) => {
         io.to(data.receiverId).emit('receive_message', {
             senderId: socket.id,
             message: data.message,
-            timestamp: new Date().toLocaleTimeString()
+            timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
         });
     });
 
-    // Handle disconnect (When they close the tab)
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-        // Remove user from RAM
-        activeUsers = activeUsers.filter(user => user.socketId !== socket.id);
+        // Mark user as offline instead of deleting them instantly, so DMs still show them!
+        const user = activeUsers.find(u => u.socketId === socket.id);
+        if(user) user.onlineStatus = false;
+        
+        // Remove them completely after 5 seconds to keep the lobby clean
+        setTimeout(() => {
+            activeUsers = activeUsers.filter(u => u.socketId !== socket.id);
+            io.emit('update_lobby', activeUsers);
+        }, 5000);
+        
         io.emit('update_lobby', activeUsers);
     });
 });
