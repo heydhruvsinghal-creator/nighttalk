@@ -11,35 +11,47 @@
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .glass-dating { background: rgba(236, 72, 153, 0.05); border: 1px solid rgba(236, 72, 153, 0.2); }
         .chip { transition: all 0.2s; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.2); }
-        .chip.selected { background: #6366f1; border-color: #818cf8; }
+        .chip.selected { background: #4f46e5; border-color: #818cf8; color: white; box-shadow: 0 0 10px rgba(79, 70, 229, 0.5); }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
     </style>
 </head>
 <body class="h-screen w-full flex items-center justify-center">
 
-    <div id="landing" class="glass max-w-lg w-full p-10 rounded-3xl shadow-2xl z-50 absolute transition-all duration-500">
-        <div class="text-center mb-8">
-            <h1 class="text-5xl font-extrabold tracking-tighter mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">NightTalk</h1>
+    <div id="landing" class="glass max-w-lg w-full p-8 rounded-3xl shadow-2xl z-50 absolute transition-all duration-500 max-h-[95vh] flex flex-col">
+        <div class="text-center mb-6">
+            <h1 class="text-5xl font-extrabold tracking-tighter mb-1 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">NightTalk</h1>
             <p class="text-gray-400 text-sm">Professional Anonymous Connectivity</p>
         </div>
-        <div class="space-y-6">
+        
+        <div class="space-y-5 overflow-y-auto pr-2 custom-scrollbar flex-1">
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Alias / Nickname</label>
+                <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Alias / Nickname</label>
                 <input type="text" id="nickname" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 text-sm" placeholder="Enter a cool name...">
             </div>
+            
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Age: <span id="ageVal" class="text-indigo-400">21</span></label>
+                <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Age: <span id="ageVal" class="text-indigo-400 text-sm">21</span></label>
                 <input type="range" id="age" min="13" max="99" value="21" class="w-full accent-indigo-500" oninput="document.getElementById('ageVal').innerText = this.value">
             </div>
-            <div class="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
+
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Interests (Select up to 5)</label>
+                <div class="bg-black/20 border border-white/5 rounded-xl p-3 h-32 overflow-y-auto">
+                    <div id="topic-container" class="flex flex-wrap gap-2">
+                        </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
                 <input type="checkbox" id="dating-opt-in" class="w-5 h-5 accent-pink-500 cursor-pointer">
                 <div class="text-sm">
                     <span class="font-bold text-pink-400">Unlock Midnight Lounge</span>
                     <p class="text-[10px] text-gray-400">Opt-in for 18+ dating features</p>
                 </div>
             </div>
-            <button onclick="enterLobby()" class="w-full py-4 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 transition-all">ENTER PLATFORM</button>
+            
+            <button onclick="enterLobby()" class="w-full py-3.5 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 transition-all tracking-widest text-sm mt-2">ENTER PLATFORM</button>
         </div>
     </div>
 
@@ -119,12 +131,38 @@
         let myData = {};
         let allUsers = []; 
         let currentChatUserId = null;
-        
-        // 🧠 The memory! Stores { userId: { name, messages: [], isOnline: true } }
         let myContacts = {}; 
-
         let pendingChatUserId = null;
         let pendingChatUserName = "";
+
+        // NEW: MASSIVE TOPICS LIST
+        const topicsList = [
+            "Politics", "Art", "Travel", "Gaming", "Coding", "Music", "Fitness", 
+            "Movies", "Anime", "Crypto", "Space", "Mental Health", "Photography", 
+            "Philosophy", "Foodie", "Astrology", "Books", "Startups", "Memes", 
+            "Sports", "Fashion", "Nature", "History", "Science", "DIY", "Pets", 
+            "Cars", "Cooking", "Investing", "Writing", "Design", "Yoga", "Tech", 
+            "EDM", "Hip-Hop"
+        ];
+        const selectedTopics = new Set();
+
+        // Build Topics UI
+        const topicContainer = document.getElementById('topic-container');
+        topicsList.forEach(topic => {
+            const span = document.createElement('span');
+            span.className = 'chip px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/5 text-gray-300 hover:bg-white/10';
+            span.innerText = topic;
+            span.onclick = () => {
+                if(selectedTopics.has(topic)) {
+                    selectedTopics.delete(topic); 
+                    span.classList.remove('selected');
+                } else if(selectedTopics.size < 5) { // Max 5 now!
+                    selectedTopics.add(topic); 
+                    span.classList.add('selected');
+                }
+            };
+            topicContainer.appendChild(span);
+        });
 
         function enterLobby() {
             const nickname = document.getElementById('nickname').value;
@@ -134,10 +172,11 @@
             if(!nickname) return alert("Pick an alias first!");
             if(lookingForDates && age < 18) return alert("You must be 18+ to enter the Midnight Lounge.");
 
-            myData = { nickname, age, lookingForDates };
+            myData = { nickname, age, lookingForDates, topics: Array.from(selectedTopics) };
             document.getElementById('my-name-display').innerText = nickname;
             
-            socket.emit('join_lobby', { nickname, age, topics: [], lookingForDates });
+            // Send topics to server!
+            socket.emit('join_lobby', myData);
             
             document.getElementById('landing').style.opacity = "0";
             setTimeout(() => {
@@ -148,7 +187,6 @@
             }, 500);
         }
 
-        // TABS LOGIC
         function switchTab(tabName) {
             ['global', 'dating', 'dms'].forEach(t => {
                 document.getElementById(`view-${t}`).classList.add('hidden');
@@ -160,7 +198,6 @@
             if(tabName === 'dms') renderDMs();
         }
 
-        // RENDER USERS
         socket.on('update_lobby', (users) => {
             allUsers = users;
             const gridGlobal = document.getElementById('grid-global');
@@ -170,29 +207,35 @@
             let datingHTML = '';
 
             users.forEach(user => {
-                // Update contact online status if they are in our history
                 if(myContacts[user.socketId]) myContacts[user.socketId].isOnline = user.onlineStatus;
+                if(user.socketId === socket.id) return; 
+                if(!user.onlineStatus) return; 
 
-                if(user.socketId === socket.id) return; // Don't draw myself
-                if(!user.onlineStatus) return; // Don't draw offline users in global
+                // HTML for the tags
+                const tagsHTML = user.topics && user.topics.length > 0 
+                    ? `<div class="flex flex-wrap gap-1 mt-3">` + user.topics.map(t => `<span class="text-[9px] uppercase tracking-widest font-semibold bg-white/10 px-2 py-1 rounded text-gray-300 border border-white/5">${t}</span>`).join('') + `</div>`
+                    : '';
 
-                // Global Card
                 globalHTML += `
-                <div class="glass p-5 rounded-2xl flex flex-col justify-between">
+                <div class="glass p-5 rounded-2xl flex flex-col justify-between hover:bg-white/5 transition-all">
                     <div>
-                        <h3 class="font-bold text-white text-lg">${user.nickname}</h3>
-                        <p class="text-xs text-gray-400">Age: ${user.age}</p>
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-bold text-white text-lg">${user.nickname}</h3>
+                            <span class="text-[10px] bg-white/10 text-gray-300 px-2 py-1 rounded-md">Age ${user.age}</span>
+                        </div>
+                        ${tagsHTML}
                     </div>
-                    <button onclick="openChat('${user.socketId}', '${user.nickname}')" class="mt-4 py-2 w-full rounded-xl bg-white/5 hover:bg-indigo-500/20 text-indigo-300 text-xs font-bold transition-all border border-white/10">MESSAGE</button>
+                    <button onclick="openChat('${user.socketId}', '${user.nickname}')" class="mt-4 py-2 w-full rounded-xl bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 text-xs font-bold transition-all border border-indigo-500/30">MESSAGE</button>
                 </div>`;
 
-                // Dating Card (Only if they opted in AND are 18+)
                 if(user.lookingForDates && user.age >= 18) {
                     datingHTML += `
-                    <div class="glass-dating p-6 rounded-3xl flex flex-col items-center text-center transform hover:scale-105 transition-all">
-                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 mb-4 flex items-center justify-center text-2xl font-bold shadow-lg">${user.nickname.charAt(0)}</div>
-                        <h3 class="font-bold text-white text-xl">${user.nickname}, ${user.age}</h3>
-                        <button onclick="openChat('${user.socketId}', '${user.nickname}')" class="mt-6 py-2 w-full rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold shadow-lg shadow-pink-500/30">💌 Say Hi</button>
+                    <div class="glass-dating p-6 rounded-3xl flex flex-col items-center text-center transform hover:scale-105 transition-all relative overflow-hidden">
+                        <div class="absolute top-3 right-3 text-[10px] bg-pink-500/20 text-pink-300 px-2 py-1 rounded-md border border-pink-500/20">Age ${user.age}</div>
+                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 mb-4 flex items-center justify-center text-2xl font-bold shadow-lg mt-2">${user.nickname.charAt(0)}</div>
+                        <h3 class="font-bold text-white text-xl">${user.nickname}</h3>
+                        ${tagsHTML}
+                        <button onclick="openChat('${user.socketId}', '${user.nickname}')" class="mt-5 py-2 w-full rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold shadow-lg shadow-pink-500/30">💌 Say Hi</button>
                     </div>`;
                 }
             });
@@ -200,16 +243,12 @@
             gridGlobal.innerHTML = globalHTML || '<p class="text-gray-500">No one is online yet.</p>';
             gridDating.innerHTML = datingHTML || '<p class="text-gray-500">The lounge is empty right now.</p>';
             
-            // Refresh DM tab if it's open
             if(!document.getElementById('view-dms').classList.contains('hidden')) renderDMs();
         });
 
-        // --- CHAT & MEMORY LOGIC ---
-
+        // --- CHAT LOGIC ---
         function initContact(id, name) {
-            if(!myContacts[id]) {
-                myContacts[id] = { name: name, messages: [], isOnline: true };
-            }
+            if(!myContacts[id]) myContacts[id] = { name: name, messages: [], isOnline: true };
         }
 
         function renderDMs() {
@@ -249,12 +288,10 @@
             document.getElementById('chat-status').innerText = myContacts[id].isOnline ? '● Online' : '○ Offline';
             document.getElementById('chat-status').className = myContacts[id].isOnline ? 'text-xs text-green-400' : 'text-xs text-gray-500';
             
-            // Render existing history
             const chatBox = document.getElementById('chat-messages');
             chatBox.innerHTML = '<div class="text-center text-xs text-gray-500 my-2">Chat History Initialized</div>';
             myContacts[id].messages.forEach(msg => appendMessageHTML(msg.sender, msg.text, msg.side, msg.time));
             
-            // Slide drawer in
             document.getElementById('chat-drawer').classList.remove('translate-x-full');
             document.getElementById('notification-popup').classList.add('hidden');
         }
@@ -270,13 +307,12 @@
             const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             if(!msg || !currentChatUserId) return;
 
-            // Save to my contacts memory
             myContacts[currentChatUserId].messages.push({ sender: 'You', text: msg, side: 'right', time: time });
             appendMessageHTML('You', msg, 'right', time);
             
             socket.emit('send_message', { receiverId: currentChatUserId, message: msg });
             input.value = '';
-            renderDMs(); // Update DM list preview
+            renderDMs();
         }
 
         document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
@@ -293,7 +329,7 @@
             } else {
                 showNotification(data.senderId, senderName, data.message);
             }
-            renderDMs(); // Update DM list preview
+            renderDMs(); 
         });
 
         function showNotification(id, name, msg) {
