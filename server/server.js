@@ -7,29 +7,40 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, { cors: { origin: '*' }, maxHttpBufferSize: 1e8 }); // Allows image uploads
 
 app.use(express.static(path.join(__dirname, '../client')));
 
-let activeUsers = [];
+// OUR RAM DATABASE
+let registeredUsers = []; 
 
 io.on('connection', (socket) => {
-    console.log('New user connected:', socket.id);
+    
+    // SIGN UP
+    socket.on('signup', (userData) => {
+        const exists = registeredUsers.find(u => u.username === userData.username);
+        if(exists) return socket.emit('auth_error', 'username already taken 💀');
 
-    socket.on('join_lobby', (userData) => {
-        const newUser = {
-            nickname: userData.nickname,
-            age: parseInt(userData.age),
-            topics: userData.topics,
-            lookingForDates: userData.lookingForDates, // NEW: Dating intent
-            socketId: socket.id,
-            onlineStatus: true
-        };
+        const newUser = { ...userData, socketId: socket.id, onlineStatus: true };
+        registeredUsers.push(newUser);
         
-        activeUsers.push(newUser);
-        io.emit('update_lobby', activeUsers);
+        socket.emit('auth_success', newUser);
+        io.emit('update_lobby', registeredUsers);
     });
 
+    // LOG IN
+    socket.on('login', (credentials) => {
+        const user = registeredUsers.find(u => u.username === credentials.username && u.password === credentials.password);
+        if(!user) return socket.emit('auth_error', 'wrong username or password bestie 🛑');
+
+        user.socketId = socket.id; // Update their current connection
+        user.onlineStatus = true;
+        
+        socket.emit('auth_success', user);
+        io.emit('update_lobby', registeredUsers);
+    });
+
+    // MESSAGES & REQUESTS
     socket.on('send_message', (data) => {
         io.to(data.receiverId).emit('receive_message', {
             senderId: socket.id,
@@ -38,18 +49,17 @@ io.on('connection', (socket) => {
         });
     });
 
+    socket.on('request_accepted', (data) => {
+        io.to(data.senderId).emit('request_accepted_notification', { accepterId: socket.id });
+    });
+
+    // DISCONNECT
     socket.on('disconnect', () => {
-        // Mark user as offline instead of deleting them instantly, so DMs still show them!
-        const user = activeUsers.find(u => u.socketId === socket.id);
-        if(user) user.onlineStatus = false;
-        
-        // Remove them completely after 5 seconds to keep the lobby clean
-        setTimeout(() => {
-            activeUsers = activeUsers.filter(u => u.socketId !== socket.id);
-            io.emit('update_lobby', activeUsers);
-        }, 5000);
-        
-        io.emit('update_lobby', activeUsers);
+        const user = registeredUsers.find(u => u.socketId === socket.id);
+        if(user) {
+            user.onlineStatus = false;
+            io.emit('update_lobby', registeredUsers);
+        }
     });
 });
 
