@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NightTalk - Anonymous Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+    <div id="landing-page" class="page active">
+        <h1 class="logo glow">NightTalk</h1>
+        <p class="subtitle">Talk to strangers who share your thoughts...</p>
+        
+        <div class="card">
+            <input type="text" id="nickname" placeholder="Choose a nickname (e.g. ShadowFox)">
+            
+            <select id="mood" class="dropdown">
+                <option value="Chill">Chill</option>
+                <option value="Deep Talk">Deep Talk</option>
+                <option value="Listener">Just Listening</option>
+            </select>
+
+            <input type="text" id="topic" placeholder="Interest (e.g. Anime, Tech)">
+            
+            <button onclick="enterLobby()" class="btn-glow">Enter NightTalk</button>
+        </div>
+    </div>
+
+    <div id="lobby-page" class="page hidden">
+        <h2>Lobby - Who's awake?</h2>
+        <div id="users-container"></div>
+    </div>
+
+    <div id="chat-page" class="page hidden">
+        <button onclick="leaveChat()" class="btn-danger">End Chat</button>
+        <h2 id="chat-partner">Chatting with...</h2>
+        <div id="chat-box" class="chat-box"></div>
+        <div class="input-area">
+            <input type="text" id="message-input" placeholder="Type a message...">
+            <button onclick="sendMessage()" class="btn-glow">Send</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
