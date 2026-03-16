@@ -2,10 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const User = require('./models/User');
 
 const app = express();
 const server = http.createServer(app);
@@ -14,31 +12,30 @@ const io = new Server(server, { cors: { origin: '*' } });
 // Serve frontend files
 app.use(express.static(path.join(__dirname, '../client')));
 
-// Connect Database
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.log(err));
+// 🧠 OUR "FAKE" DATABASE (Saves in RAM)
+let activeUsers = [];
 
 // Real-time Chat Logic
 io.on('connection', (socket) => {
     console.log('New user connected:', socket.id);
 
-    // When user joins from landing page
-    socket.on('join_lobby', async (userData) => {
-        const newUser = new User({
+    // --- THIS IS WHERE THE NEW CODE WENT! ---
+    // When user joins from the landing page
+    socket.on('join_lobby', (userData) => {
+        const newUser = {
             nickname: userData.nickname,
+            age: userData.age,           // <--- We added Age here!
             topics: userData.topics,
-            mood: userData.mood,
-            socketId: socket.id
-        });
-        await newUser.save();
+            socketId: socket.id,
+            onlineStatus: true
+        };
         
-        // Send all online users to everyone
-        const allUsers = await User.find({ onlineStatus: true });
-        io.emit('update_lobby', allUsers);
+        activeUsers.push(newUser); // Save user to RAM
+        io.emit('update_lobby', activeUsers); // Update everyone's screen
     });
+    // ----------------------------------------
 
-    // Handle private messaging
+    // Handle messages
     socket.on('send_message', (data) => {
         io.to(data.receiverId).emit('receive_message', {
             senderId: socket.id,
@@ -47,13 +44,14 @@ io.on('connection', (socket) => {
         });
     });
 
-    // Handle disconnect
-    socket.on('disconnect', async () => {
-        await User.findOneAndDelete({ socketId: socket.id });
-        const allUsers = await User.find({ onlineStatus: true });
-        io.emit('update_lobby', allUsers);
+    // Handle disconnect (When they close the tab)
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+        // Remove user from RAM
+        activeUsers = activeUsers.filter(user => user.socketId !== socket.id);
+        io.emit('update_lobby', activeUsers);
     });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
