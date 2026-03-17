@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nighttalk. | just vibes.</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>AfterHours | just vibes.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -24,7 +29,7 @@
     <div id="auth-container" class="glass max-w-lg w-full p-8 rounded-[2rem] shadow-2xl z-50 absolute transition-all duration-500 max-h-[95vh] flex flex-col border-t border-white/10">
         
         <div class="text-center mb-8">
-            <h1 class="text-5xl font-bold tracking-tighter mb-1 text-white lowercase drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">nighttalk.</h1>
+            <h1 class="text-5xl font-bold tracking-tighter mb-1 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AfterHours.</h1>
             <p id="auth-subtitle" class="text-indigo-400 text-sm font-medium lowercase">secure anonymous access.</p>
         </div>
         
@@ -78,11 +83,16 @@
 
     <div id="dashboard" class="hidden h-full w-full flex opacity-0 transition-opacity duration-700">
         <nav class="w-20 md:w-64 glass border-r border-white/5 flex flex-col p-4 bg-black/40">
-            <h2 class="hidden md:block text-2xl font-bold text-white mb-8 mt-4 px-3 lowercase">nighttalk.</h2>
+            <h2 class="hidden md:block text-xl font-bold text-white mb-8 mt-4 px-3">AfterHours.</h2>
             <div class="space-y-3 flex-1">
                 <button onclick="switchTab('global')" id="tab-global" class="w-full flex items-center gap-4 p-3.5 rounded-2xl bg-white/10 text-white font-semibold transition-all lowercase text-sm"><span>🪐</span> <span class="hidden md:block">lobby</span></button>
                 <button onclick="switchTab('dating')" id="tab-dating" class="w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-white/5 text-gray-500 font-semibold transition-all lowercase text-sm"><span>🔥</span> <span class="hidden md:block">rizz lounge</span></button>
                 <button onclick="switchTab('dms')" id="tab-dms" class="w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-white/5 text-gray-500 font-semibold transition-all lowercase text-sm"><span>💬</span> <span class="hidden md:block">chats</span></button>
+            </div>
+            <div class="mt-auto">
+                <button onclick="logout()" class="w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-red-500/10 text-red-400 font-semibold transition-all lowercase text-sm">
+                    <span>🚪</span> <span class="hidden md:block">log out</span>
+                </button>
             </div>
         </nav>
         <main class="flex-1 h-full overflow-y-auto p-4 md:p-8 custom-scrollbar">
@@ -112,10 +122,28 @@
     <script>
         const socket = io(window.location.origin, { secure: true, transports: ['websocket', 'polling'] });
         let myData = null, selectedGender = "", uploadedPhoto = null, allUsers = [], myContacts = {}, currentChatUserId = null, pendingChatUserId = null, pendingChatUserName = null;
+        let tempPassword = ""; // To safely store password during transit for auto-login
         
+        // AUTO-LOGIN LOGIC: Check if user has an active session
+        window.onload = () => {
+            const savedUser = localStorage.getItem('ah_username');
+            const savedPass = localStorage.getItem('ah_password');
+            if (savedUser && savedPass) {
+                document.getElementById('step-0').innerHTML = '<p class="text-indigo-400 font-bold animate-pulse text-sm lowercase">logging you back in...</p>';
+                socket.emit('login', { username: savedUser, password: savedPass });
+            }
+        };
+
         // The roast function!
         function forgotPassword() {
             alert("bruh... you literally don't exist here. we leave no trace. just make a new account 💀");
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('ah_username');
+            localStorage.removeItem('ah_password');
+            window.location.reload();
         }
 
         function showLogin() { hideAllSteps(); document.getElementById('step-login').classList.remove('hidden'); }
@@ -125,11 +153,47 @@
         function selectGender(gender, btn) { selectedGender = gender; document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
         function previewPhoto(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { uploadedPhoto = e.target.result; const prev = document.getElementById('photo-preview'); prev.style.backgroundImage = `url(${uploadedPhoto})`; prev.innerText = ""; }; reader.readAsDataURL(file); }
         function goToSignup2() { if(!document.getElementById('reg-user').value || !document.getElementById('reg-pass').value || !selectedGender) return alert("fill out everything bestie."); hideAllSteps(); document.getElementById('step-signup-2').classList.remove('hidden'); }
-        function submitSignup() { const username = document.getElementById('reg-user').value, password = document.getElementById('reg-pass').value, age = parseInt(document.getElementById('age').value), lookingForDates = document.getElementById('dating-opt-in').checked; if(lookingForDates && age < 18) return alert("18+ only for the lounge 🛑"); if(lookingForDates && !uploadedPhoto) return alert("upload a fit pic first 📷"); socket.emit('signup', { username, password, gender: selectedGender, age, lookingForDates, photo: uploadedPhoto }); }
-        function submitLogin() { const username = document.getElementById('login-user').value, password = document.getElementById('login-pass').value; if(!username || !password) return; socket.emit('login', { username, password }); }
-        socket.on('auth_error', (msg) => alert(msg));
-        socket.on('auth_success', (userData) => { myData = userData; document.getElementById('auth-container').classList.add('hidden'); const dash = document.getElementById('dashboard'); dash.classList.remove('hidden'); setTimeout(() => dash.style.opacity = "1", 50); renderDMs(); });
+        
+        function submitSignup() { 
+            const username = document.getElementById('reg-user').value, password = document.getElementById('reg-pass').value, age = parseInt(document.getElementById('age').value), lookingForDates = document.getElementById('dating-opt-in').checked; 
+            if(lookingForDates && age < 18) return alert("18+ only for the lounge 🛑"); 
+            if(lookingForDates && !uploadedPhoto) return alert("upload a fit pic first 📷"); 
+            tempPassword = password; // Save for auto-login
+            socket.emit('signup', { username, password, gender: selectedGender, age, lookingForDates, photo: uploadedPhoto }); 
+        }
+        
+        function submitLogin() { 
+            const username = document.getElementById('login-user').value, password = document.getElementById('login-pass').value; 
+            if(!username || !password) return; 
+            tempPassword = password; // Save for auto-login
+            socket.emit('login', { username, password }); 
+        }
+        
+        socket.on('auth_error', (msg) => {
+            alert(msg);
+            // If auto-login fails (e.g., server wiped memory), clear local storage
+            localStorage.removeItem('ah_username');
+            localStorage.removeItem('ah_password');
+            if(document.getElementById('step-0').innerHTML.includes('logging you back in')) {
+                window.location.reload();
+            }
+        });
+
+        socket.on('auth_success', (userData) => { 
+            myData = userData; 
+            // Save session
+            localStorage.setItem('ah_username', userData.username);
+            if(tempPassword) localStorage.setItem('ah_password', tempPassword);
+
+            document.getElementById('auth-container').classList.add('hidden'); 
+            const dash = document.getElementById('dashboard'); 
+            dash.classList.remove('hidden'); 
+            setTimeout(() => dash.style.opacity = "1", 50); 
+            renderDMs(); 
+        });
+
         function switchTab(tabName) { ['global', 'dating', 'dms'].forEach(t => document.getElementById(`view-${t}`).classList.add('hidden')); document.getElementById(`view-${tabName}`).classList.remove('hidden'); if(tabName === 'dms') renderDMs(); }
+        
         socket.on('update_lobby', (users) => { allUsers = users; let globalHTML = '', datingHTML = ''; users.forEach(user => { if(user.socketId === socket.id || !user.onlineStatus) return; const photoStyle = user.photo ? `background-image: url(${user.photo}); background-size: cover; text-indent: -9999px;` : ''; globalHTML += `<div class="glass p-6 rounded-[2rem] flex items-center gap-4 hover:bg-white/5 transition-all"><div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-2xl text-white shadow-lg" style="${photoStyle}">${user.username.charAt(0)}</div><div class="flex-1"><h3 class="font-bold text-white text-lg lowercase">${user.username}</h3><p class="text-[10px] text-gray-400">age ${user.age}</p></div><button onclick="openChat('${user.socketId}', '${user.username}', '${user.photo}')" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold lowercase">message</button></div>`; if(user.lookingForDates && user.age >= 18) { datingHTML += `<div class="glass-dating p-6 rounded-[2rem] flex flex-col items-center text-center"><div class="w-24 h-24 rounded-full bg-pink-600 mb-4 flex items-center justify-center text-3xl font-bold text-white shadow-[0_0_20px_rgba(236,72,153,0.3)]" style="${photoStyle}">${user.username.charAt(0)}</div><h3 class="font-bold text-white text-xl lowercase">${user.username}, ${user.age}</h3><button onclick="openChat('${user.socketId}', '${user.username}', '${user.photo}')" class="mt-4 py-3 w-full rounded-2xl bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold shadow-[0_0_15px_rgba(236,72,153,0.4)] lowercase">slide in dms 💌</button></div>`; } }); document.getElementById('grid-global').innerHTML = globalHTML || '<p class="text-gray-600">no one here rn.</p>'; document.getElementById('grid-dating').innerHTML = datingHTML || '<p class="text-gray-600">no one here rn.</p>'; });
         function initContact(id, name, photo) { if(!myContacts[id]) myContacts[id] = { name, photo, messages: [], status: 'none', iAmSender: false }; }
         function openChat(id, name, photo) { currentChatUserId = id; initContact(id, name, photo); document.getElementById('chat-username').innerText = name; const avatar = document.getElementById('chat-avatar'); if(myContacts[id].photo) { avatar.style.backgroundImage = `url(${myContacts[id].photo})`; avatar.innerText = ''; } else { avatar.style.backgroundImage = ''; avatar.innerText = name.charAt(0); } document.getElementById('chat-drawer').classList.remove('translate-x-full'); renderChatUI(); }
