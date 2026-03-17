@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NightTalk | Anonymous Chat</title>
+    <title>nighttalk. | just vibes.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -15,8 +15,6 @@
         .gender-btn.selected { background: white; color: black; box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); }
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
         .photo-preview { background-size: cover; background-position: center; }
-        /* Style for the disabled link */
-        .forgot-password-disabled { color: #52525b; font-size: 11px; font-weight: 500; cursor: not-allowed; text-transform: lowercase; }
     </style>
 </head>
 <body class="h-screen w-full flex items-center justify-center">
@@ -40,7 +38,7 @@
             <input type="password" id="login-pass" class="w-full bg-black/60 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white" placeholder="password">
             
             <div class="text-right mt-1">
-                <span class="forgot-password-disabled">forgot password? 🔒</span>
+                <span class="text-[11px] text-gray-700 cursor-not-allowed lowercase font-semibold">forgot password? 🔒</span>
             </div>
             
             <button onclick="submitLogin()" class="w-full py-4 rounded-2xl font-bold bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_0_20px_rgba(79,70,229,0.4)] transition-all lowercase mt-4">log in ➔</button>
